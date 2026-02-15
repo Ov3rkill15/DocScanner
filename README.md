@@ -90,4 +90,4 @@ Aplikasi ini menggunakan **MethodChannel** untuk berkomunikasi antara Flutter da
 
 ---
 
-Made with ❤️ by [Your Name]
+Made with ❤️ by Muhamad Alwan Suryadi
