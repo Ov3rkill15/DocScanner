@@ -35,7 +35,7 @@ class _SignatureScreenState extends State<SignatureScreen> {
     _signatureController = SignatureController(
       penStrokeWidth: _penWidth,
       penColor: _penColor,
-      exportBackgroundColor: Colors.white,
+      exportBackgroundColor: Colors.transparent,
       exportPenColor: _penColor,
     );
   }
@@ -52,7 +52,7 @@ class _SignatureScreenState extends State<SignatureScreen> {
       _signatureController = SignatureController(
         penStrokeWidth: _penWidth,
         penColor: color,
-        exportBackgroundColor: Colors.white,
+        exportBackgroundColor: Colors.transparent,
         exportPenColor: color,
         points: _signatureController.points,
       );
@@ -65,7 +65,7 @@ class _SignatureScreenState extends State<SignatureScreen> {
       _signatureController = SignatureController(
         penStrokeWidth: width,
         penColor: _penColor,
-        exportBackgroundColor: Colors.white,
+        exportBackgroundColor: Colors.transparent,
         exportPenColor: _penColor,
         points: _signatureController.points,
       );

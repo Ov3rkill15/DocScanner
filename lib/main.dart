@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'config/app_theme.dart';
 import 'config/app_routes.dart';
+import 'dart:io';
+import 'package:permission_handler/permission_handler.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -11,6 +13,13 @@ void main() async {
     statusBarColor: Colors.transparent,
     statusBarIconBrightness: Brightness.dark,
   ));
+
+  if (Platform.isAndroid) {
+    await Permission.storage.request();
+    if (await Permission.manageExternalStorage.isDenied) {
+      await Permission.manageExternalStorage.request();
+    }
+  }
 
   runApp(const DocScannerApp());
 }

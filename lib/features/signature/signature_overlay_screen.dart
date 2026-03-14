@@ -24,12 +24,40 @@ class SignatureOverlayScreen extends StatefulWidget {
 
 class _SignatureOverlayScreenState extends State<SignatureOverlayScreen> {
   // Signature position & scale
-  Offset _sigOffset = const Offset(80, 300);
+  Offset _sigOffset = Offset.zero;
   double _sigScale = 0.5;
   double _baseScale = 0.5;
   bool _isSaving = false;
+  bool _initialized = false;
 
   final GlobalKey _compositeKey = GlobalKey();
+  final GlobalKey _imageKey = GlobalKey();
+
+  @override
+  void initState() {
+    super.initState();
+    // Center signature after first frame
+    WidgetsBinding.instance.addPostFrameCallback((_) => _centerSignature());
+  }
+
+  void _centerSignature() {
+    final imageBox = _imageKey.currentContext?.findRenderObject() as RenderBox?;
+    if (imageBox != null) {
+      final imageSize = imageBox.size;
+      // Center the signature roughly in the lower-center area
+      final sigWidth = 300.0 * _sigScale;
+      final sigHeight = 150.0 * _sigScale;
+      setState(() {
+        _sigOffset = Offset(
+          (imageSize.width - sigWidth) / 2,
+          imageSize.height - sigHeight - (imageSize.height * 0.15),
+        );
+        _initialized = true;
+      });
+    } else {
+      setState(() => _initialized = true);
+    }
+  }
 
   void _onScaleStart(ScaleStartDetails details) {
     _baseScale = _sigScale;
@@ -169,27 +197,30 @@ class _SignatureOverlayScreenState extends State<SignatureOverlayScreen> {
                   children: [
                     // Document image
                     Image.file(
+                      key: _imageKey,
                       File(widget.documentImagePath),
                       fit: BoxFit.contain,
                     ),
 
                     // Draggable + scalable signature
-                    Positioned(
-                      left: _sigOffset.dx,
-                      top: _sigOffset.dy,
-                      child: GestureDetector(
-                        onScaleStart: _onScaleStart,
-                        onScaleUpdate: _onScaleUpdate,
-                        child: Transform.scale(
-                          scale: _sigScale,
-                          child: Image.file(
-                            File(widget.signaturePath),
-                            width: 300,
-                            fit: BoxFit.contain,
+                    if (_initialized)
+                      Positioned(
+                        left: _sigOffset.dx,
+                        top: _sigOffset.dy,
+                        child: GestureDetector(
+                          onScaleStart: _onScaleStart,
+                          onScaleUpdate: _onScaleUpdate,
+                          child: Transform.scale(
+                            scale: _sigScale,
+                            alignment: Alignment.topLeft,
+                            child: Image.file(
+                              File(widget.signaturePath),
+                              width: 300,
+                              fit: BoxFit.contain,
+                            ),
                           ),
                         ),
                       ),
-                    ),
                   ],
                 ),
               ),

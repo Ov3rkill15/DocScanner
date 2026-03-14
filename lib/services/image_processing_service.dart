@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:image/image.dart' as img;
@@ -62,6 +61,20 @@ class ImageProcessingService {
     } catch (e) {
       debugPrint("Native Error: $e");
       return null;
+    }
+  }
+
+  /// Check if multiple images were shared to the app via Intent
+  Future<List<String>> getSharedImages() async {
+    try {
+      final List<dynamic>? paths = await platform.invokeMethod('getSharedImages');
+      if (paths != null) {
+        return paths.cast<String>();
+      }
+      return [];
+    } catch (e) {
+      debugPrint("Native Error: $e");
+      return [];
     }
   }
 

@@ -30,7 +30,7 @@ class MainActivity : FlutterFragmentActivity() {
     private val CHANNEL = "com.example.coba_aplikasi_flutter/image_processing"
     private val TAG = "NativeKotlin"
     private val executor = Executors.newSingleThreadExecutor()
-    private var sharedImagePath: String? = null
+    private var sharedImagePaths: MutableList<String> = mutableListOf()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,10 +44,23 @@ class MainActivity : FlutterFragmentActivity() {
 
     private fun handleIntent(intent: Intent) {
         if (Intent.ACTION_SEND == intent.action && intent.type?.startsWith("image/") == true) {
-            Log.d(TAG, "Menerima Shared Intent dari aplikasi lain!")
+            Log.d(TAG, "Menerima Shared Intent (single) dari aplikasi lain!")
             (intent.getParcelableExtra<Uri>(Intent.EXTRA_STREAM))?.let { uri ->
-
-                sharedImagePath = copyUriToCache(uri)
+                val path = copyUriToCache(uri)
+                if (path != null) {
+                    sharedImagePaths.clear()
+                    sharedImagePaths.add(path)
+                }
+            }
+        } else if (Intent.ACTION_SEND_MULTIPLE == intent.action && intent.type?.startsWith("image/") == true) {
+            Log.d(TAG, "Menerima Shared Intent (multiple) dari aplikasi lain!")
+            val uris = intent.getParcelableArrayListExtra<Uri>(Intent.EXTRA_STREAM)
+            if (uris != null) {
+                sharedImagePaths.clear()
+                for (uri in uris) {
+                    val path = copyUriToCache(uri)
+                    if (path != null) sharedImagePaths.add(path)
+                }
             }
         }
     }
@@ -98,9 +111,17 @@ class MainActivity : FlutterFragmentActivity() {
                     }
                 }
                 "getSharedImage" -> {
-                    Log.d(TAG, "Flutter meminta shared image. Ada? ${if (sharedImagePath != null) "Ya" else "Tidak"}")
-                    result.success(sharedImagePath)
-                    sharedImagePath = null
+                    // Legacy single image support
+                    val path = if (sharedImagePaths.isNotEmpty()) sharedImagePaths[0] else null
+                    result.success(path)
+                }
+                "getSharedImages" -> {
+                    if (sharedImagePaths.isNotEmpty()) {
+                        Log.d(TAG, "Flutter meminta shared images. Ada ${sharedImagePaths.size} gambar")
+                    }
+                    val paths = sharedImagePaths.toList()
+                    sharedImagePaths.clear()
+                    result.success(if (paths.isNotEmpty()) paths else null)
                 }
                 "scanDocument" -> {
                     Log.d(TAG, "Memulai scan dokumen via ML Kit Native")

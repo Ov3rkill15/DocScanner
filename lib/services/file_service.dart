@@ -116,4 +116,108 @@ class FileService {
     final dir = await _storageDir;
     return dir.path;
   }
+
+  // ─── PDF GALLERY ──────────────────────────────────────────
+
+  static const String _pdfDir = '/storage/emulated/0/Download/DocScanner/PDF';
+  static const String _imageDir = '/storage/emulated/0/Download/DocScanner/Foto';
+
+  static const _imageExts = ['.jpg', '.jpeg', '.png', '.webp', '.bmp'];
+
+  /// List all saved image files from Download/DocScanner/Foto
+  Future<List<File>> listSavedImages() async {
+    try {
+      final dir = Directory(_imageDir);
+      if (!await dir.exists()) return [];
+
+      final entities = await dir.list().toList();
+      final imgFiles = entities
+          .whereType<File>()
+          .where((f) => _imageExts.contains(p.extension(f.path).toLowerCase()))
+          .toList();
+
+      imgFiles.sort((a, b) {
+        final aStat = a.statSync();
+        final bStat = b.statSync();
+        return bStat.modified.compareTo(aStat.modified);
+      });
+
+      return imgFiles;
+    } catch (e) {
+      return [];
+    }
+  }
+
+  /// List all saved PDF files from Download/DocScanner/PDF
+  Future<List<File>> listSavedPdfs() async {
+    try {
+      final dir = Directory(_pdfDir);
+      if (!await dir.exists()) return [];
+
+      final entities = await dir.list().toList();
+      final pdfFiles = entities
+          .whereType<File>()
+          .where((f) => p.extension(f.path).toLowerCase() == '.pdf')
+          .toList();
+
+      // Sort by last modified, newest first
+      pdfFiles.sort((a, b) {
+        final aStat = a.statSync();
+        final bStat = b.statSync();
+        return bStat.modified.compareTo(aStat.modified);
+      });
+
+      return pdfFiles;
+    } catch (e) {
+      return [];
+    }
+  }
+
+  /// Delete a PDF file by path
+  Future<bool> deletePdf(String filePath) async {
+    try {
+      final file = File(filePath);
+      if (await file.exists()) {
+        await file.delete();
+        return true;
+      }
+      return false;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// Get info about a PDF file (name, size in bytes, last modified)
+  Map<String, dynamic> getPdfInfo(File file) {
+    try {
+      final stat = file.statSync();
+      return {
+        'name': p.basenameWithoutExtension(file.path),
+        'fileName': p.basename(file.path),
+        'path': file.path,
+        'sizeBytes': stat.size,
+        'sizeFormatted': formatBytes(stat.size),
+        'modified': stat.modified,
+      };
+    } catch (e) {
+      return {
+        'name': p.basenameWithoutExtension(file.path),
+        'fileName': p.basename(file.path),
+        'path': file.path,
+        'sizeBytes': 0,
+        'sizeFormatted': '0 B',
+        'modified': DateTime.now(),
+      };
+    }
+  }
+
+  /// Format file size to human-readable string
+  String formatBytes(int bytes) {
+    if (bytes < 1024) return '$bytes B';
+    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
+    if (bytes < 1024 * 1024 * 1024) {
+      return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
+    }
+    return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(1)} GB';
+  }
 }

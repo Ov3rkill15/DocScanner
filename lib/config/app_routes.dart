@@ -8,7 +8,6 @@ import '../features/id_card/id_card_screen.dart';
 import '../features/signature/signature_screen.dart';
 import '../features/signature/signature_gallery_screen.dart';
 import '../features/signature/signature_overlay_screen.dart';
-import '../features/ocr/ocr_screen.dart';
 
 /// Named route constants
 class AppRoutes {
@@ -23,7 +22,7 @@ class AppRoutes {
   static const String signature = '/signature';
   static const String signatureGallery = '/signature-gallery';
   static const String signatureOverlay = '/signature-overlay';
-  static const String ocr = '/ocr';
+
 
   /// Generate route from settings
   static Route<dynamic> generateRoute(RouteSettings settings) {
@@ -78,9 +77,7 @@ class AppRoutes {
           settings,
         );
 
-      case ocr:
-        final imagePath = settings.arguments as String;
-        return _buildRoute(OcrScreen(imagePath: imagePath), settings);
+
 
       default:
         return _buildRoute(const HomeScreen(), settings);

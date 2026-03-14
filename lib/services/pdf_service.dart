@@ -48,8 +48,8 @@ class PdfService {
     if (outputDir != null) {
       dir = outputDir;
     } else {
-      // Try saving to Download/DocScanner on external storage
-      final dlDir = Directory('/storage/emulated/0/Download/DocScanner');
+      // Try saving to Download/DocScanner/PDF on external storage
+      final dlDir = Directory('/storage/emulated/0/Download/DocScanner/PDF');
       if (await dlDir.exists() || await dlDir.create(recursive: true).then((_) => true).catchError((_) => false)) {
         dir = dlDir.path;
       } else {

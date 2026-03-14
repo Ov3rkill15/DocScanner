@@ -12,6 +12,9 @@ class DocCard extends StatelessWidget {
   final VoidCallback? onDelete;
   final VoidCallback? onRename;
   final bool isListMode;
+  final bool isSelectMode;
+  final bool isSelected;
+  final ValueChanged<ScanDocument>? onSelect;
 
   const DocCard({
     super.key,
@@ -20,6 +23,9 @@ class DocCard extends StatelessWidget {
     this.onDelete,
     this.onRename,
     this.isListMode = false,
+    this.isSelectMode = false,
+    this.isSelected = false,
+    this.onSelect,
   });
 
   @override
@@ -31,11 +37,24 @@ class DocCard extends StatelessWidget {
     final theme = Theme.of(context);
 
     return GestureDetector(
-      onTap: onTap,
-      onLongPress: () => _showContextMenu(context),
+      onTap: () {
+        if (isSelectMode) {
+          onSelect?.call(document);
+        } else {
+          onTap?.call();
+        }
+      },
+      onLongPress: () {
+        if (!isSelectMode) {
+          _showContextMenu(context);
+        }
+      },
       child: Container(
         decoration: BoxDecoration(
           color: theme.cardTheme.color,
+          border: isSelected
+              ? Border.all(color: AppColors.accent2, width: 2)
+              : null,
           borderRadius: AppRadius.cardRadius,
           boxShadow: [
             BoxShadow(
@@ -53,7 +72,24 @@ class DocCard extends StatelessWidget {
               child: ClipRRect(
                 borderRadius: const BorderRadius.vertical(
                     top: Radius.circular(20)),
-                child: _buildThumbnail(),
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    _buildThumbnail(),
+                    if (isSelected)
+                      Container(color: AppColors.accent2.withValues(alpha: 0.15)),
+                    if (isSelectMode)
+                      Positioned(
+                        top: 8,
+                        right: 8,
+                        child: GestureDetector(
+                          onTap: () => onSelect?.call(document),
+                          behavior: HitTestBehavior.opaque,
+                          child: _buildCheckbox(),
+                        ),
+                      ),
+                  ],
+                ),
               ),
             ),
 
@@ -95,16 +131,47 @@ class DocCard extends StatelessWidget {
     );
   }
 
+  Widget _buildCheckbox() {
+    return Container(
+      width: 24,
+      height: 24,
+      decoration: BoxDecoration(
+        color: isSelected ? AppColors.accent2 : Colors.black.withValues(alpha: 0.5),
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: isSelected ? AppColors.accent2 : Colors.white54,
+          width: 2,
+        ),
+      ),
+      child: isSelected
+          ? const Icon(Icons.check_rounded, color: Colors.white, size: 16)
+          : null,
+    );
+  }
+
   Widget _buildListCard(BuildContext context) {
     final theme = Theme.of(context);
 
     return GestureDetector(
-      onTap: onTap,
-      onLongPress: () => _showContextMenu(context),
+      onTap: () {
+        if (isSelectMode) {
+          onSelect?.call(document);
+        } else {
+          onTap?.call();
+        }
+      },
+      onLongPress: () {
+        if (!isSelectMode) {
+          _showContextMenu(context);
+        }
+      },
       child: Container(
         height: 80,
         decoration: BoxDecoration(
           color: theme.cardTheme.color,
+          border: isSelected
+              ? Border.all(color: AppColors.accent2, width: 2)
+              : null,
           borderRadius: AppRadius.cardRadius,
           boxShadow: [
             BoxShadow(
@@ -123,7 +190,14 @@ class DocCard extends StatelessWidget {
               child: SizedBox(
                 width: 80,
                 height: 80,
-                child: _buildThumbnail(),
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    _buildThumbnail(),
+                    if (isSelected)
+                      Container(color: AppColors.accent2.withValues(alpha: 0.15)),
+                  ],
+                ),
               ),
             ),
 
@@ -151,11 +225,21 @@ class DocCard extends StatelessWidget {
               ),
             ),
 
-            // More menu
-            IconButton(
-              onPressed: () => _showContextMenu(context),
-              icon: const Icon(Icons.more_vert_rounded, size: 20),
-            ),
+            // More menu or Checkbox
+            if (isSelectMode)
+              Padding(
+                padding: const EdgeInsets.only(right: 14),
+                child: GestureDetector(
+                  onTap: () => onSelect?.call(document),
+                  behavior: HitTestBehavior.opaque,
+                  child: _buildCheckbox(),
+                ),
+              )
+            else
+              IconButton(
+                onPressed: () => _showContextMenu(context),
+                icon: const Icon(Icons.more_vert_rounded, size: 20),
+              ),
           ],
         ),
       ),
@@ -223,6 +307,14 @@ class DocCard extends StatelessWidget {
                 color: Colors.grey[300],
                 borderRadius: BorderRadius.circular(2),
               ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.check_circle_outline_rounded, color: AppColors.accent2),
+              title: const Text('Pilih'),
+              onTap: () {
+                Navigator.pop(ctx);
+                onSelect?.call(document);
+              },
             ),
             ListTile(
               leading: const Icon(Icons.edit_rounded, color: AppColors.primary),
